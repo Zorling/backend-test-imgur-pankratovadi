@@ -1,6 +1,14 @@
 package ru.pankratovadi;
 
+import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.builder.ResponseSpecBuilder;
+import io.restassured.http.ContentType;
+import io.restassured.specification.RequestSpecification;
+import io.restassured.specification.ResponseSpecification;
 import org.hamcrest.CoreMatchers;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,60 +19,83 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 //В классе объявляем, что он наследует методы из BaseTest, что бы подтянулись все значения переменных
 public class imageTests extends BaseTest{
-    String imageDeleteHash;
+    static String imageDeleteHash;
+    String imageDeleteHash2;
     String imageDeleteHash1;
+
+    static RequestSpecification requestSpec = given()
+            .baseUri(host)
+            .header("Authorization", token);
+    RequestSpecification requestSpecMulti = given()
+            .baseUri(host)
+            .header("Authorization", token)
+            .contentType("multipart/form-data");
+
+    static ResponseSpecification responseSpec = given()
+
+            .expect()
+            .statusCode(200)
+                .statusLine("HTTP/1.1 200 OK")
+                .contentType(ContentType.JSON)
+
+            ;
+    ResponseSpecification responseSpecBig = given()
+            .expect()
+            .body("data.width", CoreMatchers.equalTo(bigwidth))
+            .body("data.height", CoreMatchers.equalTo(bigheight))
+            ;
+    ResponseSpecification responseSpecMed = given()
+            .expect()
+            .body("data.width", CoreMatchers.equalTo(medwidth))
+            .body("data.height", CoreMatchers.equalTo(medheight))
+            ;
+    ResponseSpecification responseSpecSmall = given()
+            .expect()
+            .body("data.width", CoreMatchers.equalTo(smallwidth))
+            .body("data.height", CoreMatchers.equalTo(smallheight))
+            ;
+    ResponseSpecification responseSpecPNG = given()
+            .expect()
+            .body("data.width", CoreMatchers.equalTo(PNGwidth))
+            .body("data.height", CoreMatchers.equalTo(PNGheight))
+            ;
+    ResponseSpecification responseSpecGIF = given()
+            .expect()
+            .body("data.width", CoreMatchers.equalTo(GIFwidth))
+            .body("data.height", CoreMatchers.equalTo(GIFheight))
+            ;
 
 
     @Test
     void uploadImageBase64Test(){
         imageDeleteHash =
         given()
-                .header("Authorization", token)
-                .body(new File("src/test/resources/wolfBig.jpeg"))
+                .spec(requestSpec)
+                .body(new File(urlbig))
                 .expect()
-                .statusCode(200)
+                .spec(responseSpec)
+                //.spec(responseSpec2)
                 .when()
                 .post("image")
                 .prettyPeek()
                 .jsonPath()
                 .get("data.deletehash")
-
-                //.then()
-                //.statusCode(200)
-        ;
-
-    }
-    @AfterEach
-    void tearDown(){
-        given()
-                .header("Authorization", token)
-                .when()
-                .delete("https://api.imgur.com/3/image/{imageHash}", imageDeleteHash)
-                .then()
-                .statusCode(200)
         ;
     }
+
 // Домашняя работе 03
     //проверка загрузки большой картинки
     @Test
     void uploadBigImage(){
         imageDeleteHash =
                 given()
-                        //Весь хедер выносить сюда
-                        .header("Authorization", token) // Параметр авторизации
-                        //Весь хедер выносить сюда
+                        .spec(requestSpec)
 
-                        //Все боди выносить сюда
-                        .body(new File("src/test/resources/wolfBig.jpeg")) //Тело запроса, отправляем большую картинку
-                        //Все боди выносить сюда
+                        .body(new File(urlbig)) //Тело запроса, отправляем большую картинку
 
-
-                        //Все проверки ответа выносить сюда
                         .expect()//Проверка
-                        .statusCode(200) // Проверка кода ответа
-                        .body("data.width", CoreMatchers.equalTo(2249))
-                        .body("data.height", CoreMatchers.equalTo(1500))
-                        //Все проверки ответа выносить сюда
+                        .spec(responseSpec)
+                        .spec(responseSpecBig)
 
                         .when() //Отправка нашего запроса
                         .post("image") //отправка картинки
@@ -75,41 +106,27 @@ public class imageTests extends BaseTest{
 
     }
     //Вызывается после выполнения нашего теста, что бы подчистить тестовые данные за собой
-    @AfterEach
+   /* @AfterEach
     void tearDownBigImage(){
         given()
-                .header("Authorization", token)
+                .spec(requestSpec)
                 .when()
                 //Вызываем запрос на удаление картинки используя полученный в предыдущем запросе imageHash
                 .delete("https://api.imgur.com/3/image/{imageHash}", imageDeleteHash)
                 .then()
-                //Проверяем, что ответ успешный
-                .statusCode(200)
+                .spec(responseSpec)
         ;
-    }
+    }*/
     //проверка загрузки средней картинки
     @Test
     void uploadMedImage(){
         imageDeleteHash =
                 given()
-                        //Весь хедер выносить сюда
-                        .header("Authorization", token) // Параметр авторизации
-                        //Весь хедер выносить сюда
-
-                        //Все боди выносить сюда
-                        .body(new File("src/test/resources/wolfMed.jpg")) //Тело запроса, отправляем среднюю картинку
-                        //Все боди выносить сюда
-
-
-                        //Все проверки ответа выносить сюда
+                        .spec(requestSpec)
+                        .body(new File(urlmed)) //Тело запроса, отправляем среднюю картинку
                         .expect()//Проверка
-                        .statusCode(200)
-                        .body("data.width", CoreMatchers.equalTo(1280))
-                        .body("data.height", CoreMatchers.equalTo(800))
-
-                        // Проверка кода ответа
-                        //Все проверки ответа выносить сюда
-
+                        .spec(responseSpec)
+                        .spec(responseSpecMed)
                         .when() //Отправка нашего запроса
                         .post("image") // URL куда отправлять картинку
                         .prettyPeek() // задаем вывод читаемого ответа
@@ -119,44 +136,27 @@ public class imageTests extends BaseTest{
         ;
 
     }
-    //Вызывается после выполнения нашего теста, что бы подчистить тестовые данные за собой
     @AfterEach
     void tearDownMedImage(){
         given()
-                .header("Authorization", token)
+                .spec(requestSpec)
                 .when()
-                //Вызываем запрос на удаление картинки используя полученный в предыдущем запросе imageHash
-                .delete("https://api.imgur.com/3/image/{imageHash}", imageDeleteHash)
+                .delete(urlmed, imageDeleteHash)
                 .then()
-                //Проверяем, что ответ успешный
-                .statusCode(200)
+                .spec(responseSpec)
         ;
     }
-
     //проверка загрузки маленькой картинки
     @Test
     void uploadSmallImage(){
         imageDeleteHash =
                 given()
-                        //Весь хедер выносить сюда
-                        .header("Authorization", token) // Параметр авторизации
-                        //Весь хедер выносить сюда
-
+                        .spec(requestSpec)
                         //Все боди выносить сюда
-                        .body(new File("src/test/resources/wolfSmall.jpg")) //Тело запроса, отправляем маленькую картинку
-                        //Все боди выносить сюда
-
-
-                        //Все проверки ответа выносить сюда
+                        .body(new File(urlsmall)) //Тело запроса, отправляем маленькую картинку
                         .expect()//Проверка
-                        .statusCode(200)
-                        .body("data.width", CoreMatchers.equalTo(550))
-                        .body("data.height", CoreMatchers.equalTo(412))
-
-
-                        // Проверка кода ответа
-                        //Все проверки ответа выносить сюда
-
+                        .spec(responseSpec)
+                        .spec(responseSpecSmall)
                         .when() //Отправка нашего запроса
                         .post("image") // URL куда отправлять картинку
                         .prettyPeek() // задаем вывод читаемого ответа
@@ -166,44 +166,26 @@ public class imageTests extends BaseTest{
         ;
 
     }
-    //Вызывается после выполнения нашего теста, что бы подчистить тестовые данные за собой
     @AfterEach
     void tearDownSmallImage(){
         given()
-                .header("Authorization", token)
+                .spec(requestSpec)
                 .when()
-                //Вызываем запрос на удаление картинки используя полученный в предыдущем запросе imageHash
-                .delete("https://api.imgur.com/3/image/{imageHash}", imageDeleteHash)
+                .delete(urlsmall, imageDeleteHash)
                 .then()
-                //Проверяем, что ответ успешный
-                .statusCode(200)
+                .spec(responseSpec)
         ;
     }
-
     //проверка загрузки PNG картинки
     @Test
     void uploadPNGImage(){
         imageDeleteHash =
                 given()
-                        //Весь хедер выносить сюда
-                        .header("Authorization", token) // Параметр авторизации
-                        //Весь хедер выносить сюда
-
-                        //Все боди выносить сюда
-                        .body(new File("src/test/resources/wolfPNG.png")) //Тело запроса, отправляем PNG картинку
-                        //Все боди выносить сюда
-
-
-                        //Все проверки ответа выносить сюда
+                        .spec(requestSpec)
+                        .body(new File(urlPNG)) //Тело запроса, отправляем PNG картинку
                         .expect()//Проверка
-                        .statusCode(200)
-                        .body("data.width", CoreMatchers.equalTo(1280))
-                        .body("data.height", CoreMatchers.equalTo(1322))
-
-
-                        // Проверка кода ответа
-                        //Все проверки ответа выносить сюда
-
+                        .spec(responseSpec)
+                        .spec(responseSpecPNG)
                         .when() //Отправка нашего запроса
                         .post("image") // URL куда отправлять картинку
                         .prettyPeek() // задаем вывод читаемого ответа
@@ -213,17 +195,14 @@ public class imageTests extends BaseTest{
         ;
 
     }
-    //Вызывается после выполнения нашего теста, что бы подчистить тестовые данные за собой
     @AfterEach
     void tearDownPNGImage(){
         given()
-                .header("Authorization", token)
+                .spec(requestSpec)
                 .when()
-                //Вызываем запрос на удаление картинки используя полученный в предыдущем запросе imageHash
-                .delete("https://api.imgur.com/3/image/{imageHash}", imageDeleteHash)
+                .delete(urlPNG, imageDeleteHash)
                 .then()
-                //Проверяем, что ответ успешный
-                .statusCode(200)
+                .spec(responseSpec)
         ;
     }
 
@@ -232,25 +211,11 @@ public class imageTests extends BaseTest{
     void uploadGifImage(){
         imageDeleteHash =
                 given()
-                        //Весь хедер выносить сюда
-                        .header("Authorization", token) // Параметр авторизации
-                        //Весь хедер выносить сюда
-
-                        //Все боди выносить сюда
-                        .body(new File("src/test/resources/5sLH.gif")) //Тело запроса, отправляем Gif картинку
-                        //Все боди выносить сюда
-
-
-                        //Все проверки ответа выносить сюда
+                        .spec(requestSpec)
+                        .body(new File(urlGIF)) //Тело запроса, отправляем Gif картинку
                         .expect()//Проверка
-                        .statusCode(200)
-                        .body("data.width", CoreMatchers.equalTo(500))
-                        .body("data.height", CoreMatchers.equalTo(692))
-
-
-                        // Проверка кода ответа
-                        //Все проверки ответа выносить сюда
-
+                        .spec(responseSpec)
+                        .spec(responseSpecGIF)
                         .when() //Отправка нашего запроса
                         .post("image") // URL куда отправлять картинку
                         .prettyPeek() // задаем вывод читаемого ответа
@@ -260,17 +225,14 @@ public class imageTests extends BaseTest{
         ;
 
     }
-    //Вызывается после выполнения нашего теста, что бы подчистить тестовые данные за собой
     @AfterEach
     void tearDownGifImage(){
         given()
-                .header("Authorization", token)
+                .spec(requestSpec)
                 .when()
-                //Вызываем запрос на удаление картинки используя полученный в предыдущем запросе imageHash
-                .delete("https://api.imgur.com/3/image/{imageHash}", imageDeleteHash)
+                .delete(urlGIF, imageDeleteHash)
                 .then()
-                //Проверяем, что ответ успешный
-                .statusCode(200)
+                .spec(responseSpec)
         ;
     }
 
@@ -279,29 +241,13 @@ public class imageTests extends BaseTest{
     void uploadImageDescription(){
         imageDeleteHash =
                 given()
-                        //Весь хедер выносить сюда
-                        .header("Authorization", token) // Параметр авторизации
-
-                        //Весь хедер выносить сюда
-
-                        //Все боди выносить сюда
-                        .contentType("multipart/form-data")
-                        .multiPart("image", new File("src/test/resources/5sLH.gif"),"multipart/form-data")
-                        .multiPart("description", "jjj","multipart/form-data")
-                        //Все боди выносить сюда
-
-
-                        //Все проверки ответа выносить сюда
+                        .spec(requestSpecMulti)
+                        .multiPart("image", new File(urlGIF),"multipart/form-data")
+                        .multiPart("description",text,"multipart/form-data")
                         .expect()//Проверка
-                        .statusCode(200)
-                        .body("data.width", CoreMatchers.equalTo(500))
-                        .body("data.height", CoreMatchers.equalTo(692))
-                        .body("data.description", CoreMatchers.equalTo("jjj"))
-
-
-                        // Проверка кода ответа
-                        //Все проверки ответа выносить сюда
-
+                        .spec(responseSpec)
+                        .spec(responseSpecGIF)
+                        .body("data.description", CoreMatchers.equalTo(text))
                         .when() //Отправка нашего запроса
                         .post("image") // URL куда отправлять картинку
                         .prettyPeek() // задаем вывод читаемого ответа
@@ -316,44 +262,25 @@ public class imageTests extends BaseTest{
     @AfterEach
     void tearDownImageDescription(){
         given()
-                .header("Authorization", token)
+                .spec(requestSpec)
                 .when()
-                //Вызываем запрос на удаление картинки используя полученный в предыдущем запросе imageHash
                 .delete("https://api.imgur.com/3/image/{imageHash}", imageDeleteHash)
                 .then()
-                //Проверяем, что ответ успешный
-                .statusCode(200)
+                .spec(responseSpec)
         ;
     }
-
     //Проверка загрузки картинки с названием
     @Test
     void uploadImageName(){
         imageDeleteHash =
                 given()
-                        //Весь хедер выносить сюда
-                        .header("Authorization", token) // Параметр авторизации
-
-                        //Весь хедер выносить сюда
-
-                        //Все боди выносить сюда
-                        .contentType("multipart/form-data")
-                        .multiPart("image", new File("src/test/resources/5sLH.gif"),"multipart/form-data")
-                        .multiPart("name", "nnn","multipart/form-data")
-                        //Все боди выносить сюда
-
-
-                        //Все проверки ответа выносить сюда
+                        .spec(requestSpecMulti)
+                        .multiPart("image", new File(urlGIF),"multipart/form-data")
+                        .multiPart("name", text,"multipart/form-data")
                         .expect()//Проверка
-                        .statusCode(200)
-                        .body("data.width", CoreMatchers.equalTo(500))
-                        .body("data.height", CoreMatchers.equalTo(692))
-                        .body("data.name", CoreMatchers.equalTo("nnn"))
-
-
-                        // Проверка кода ответа
-                        //Все проверки ответа выносить сюда
-
+                        .spec(responseSpec)
+                        .spec(responseSpecGIF)
+                        .body("data.name", CoreMatchers.equalTo(text))
                         .when() //Отправка нашего запроса
                         .post("image") // URL куда отправлять картинку
                         .prettyPeek() // задаем вывод читаемого ответа
@@ -363,17 +290,14 @@ public class imageTests extends BaseTest{
         ;
 
     }
-    //Вызывается после выполнения нашего теста, что бы подчистить тестовые данные за собой
     @AfterEach
     void tearDownImageName(){
         given()
-                .header("Authorization", token)
+                .spec(requestSpec)
                 .when()
-                //Вызываем запрос на удаление картинки используя полученный в предыдущем запросе imageHash
                 .delete("https://api.imgur.com/3/image/{imageHash}", imageDeleteHash)
                 .then()
-                //Проверяем, что ответ успешный
-                .statusCode(200)
+                .spec(responseSpec)
         ;
     }
 
@@ -382,71 +306,39 @@ public class imageTests extends BaseTest{
     void uploadImageTitle(){
         imageDeleteHash =
                 given()
-                        //Весь хедер выносить сюда
-                        .header("Authorization", token) // Параметр авторизации
-
-                        //Весь хедер выносить сюда
-
-                        //Все боди выносить сюда
-                        .contentType("multipart/form-data")
-                        .multiPart("image", new File("src/test/resources/5sLH.gif"),"multipart/form-data")
-                        .multiPart("title", "iii","multipart/form-data")
-                        //Все боди выносить сюда
-
-
-                        //Все проверки ответа выносить сюда
+                        .spec(requestSpecMulti)
+                        .multiPart("image", new File(urlGIF),"multipart/form-data")
+                        .multiPart("title", text,"multipart/form-data")
                         .expect()//Проверка
-                        .statusCode(200)
-                        .body("data.width", CoreMatchers.equalTo(500))
-                        .body("data.height", CoreMatchers.equalTo(692))
-                        .body("data.title", CoreMatchers.equalTo("iii"))
-
-
-                        // Проверка кода ответа
-                        //Все проверки ответа выносить сюда
-
+                        .spec(responseSpec)
+                        .spec(responseSpecGIF)
+                        .body("data.title", CoreMatchers.equalTo(text))
                         .when() //Отправка нашего запроса
                         .post("image") // URL куда отправлять картинку
                         .prettyPeek() // задаем вывод читаемого ответа
                         .jsonPath() //подключаем метод чтения
                         .get("data.deletehash") //получаем хеш картинки для передачи на удаление в следующий метод
-
         ;
-
     }
 
     //Вызывается после выполнения нашего теста, что бы подчистить тестовые данные за собой
     @AfterEach
     void tearDownImageTitle(){
         given()
-                .header("Authorization", token)
+                .spec(requestSpec)
                 .when()
-                //Вызываем запрос на удаление картинки используя полученный в предыдущем запросе imageHash
                 .delete("https://api.imgur.com/3/image/{imageHash}", imageDeleteHash)
                 .then()
-                //Проверяем, что ответ успешный
-                .statusCode(200)
+                .spec(responseSpec)
         ;
     }
-
     //Проверка существования GIF картинки
     @BeforeEach
     void postGIFImage(){
         imageDeleteHash =
                 given()
-                        //Весь хедер выносить сюда
-                        .header("Authorization", token) // Параметр авторизации
-
-                        //Весь хедер выносить сюда
-
-                        //Все боди выносить сюда
-                        .contentType("multipart/form-data")
-                        .multiPart("image", new File("src/test/resources/5sLH.gif"),"multipart/form-data")
-                       // .multiPart("title", "iii","multipart/form-data")
-                        //Все боди выносить сюда
-
-                        //Все проверки ответа выносить сюда
-
+                        .spec(requestSpecMulti)
+                        .multiPart("image", new File(urlGIF),"multipart/form-data")
                         .when() //Отправка нашего запроса
                         .post("image") // URL куда отправлять картинку
                         .prettyPeek() // задаем вывод читаемого ответа
@@ -460,52 +352,23 @@ public class imageTests extends BaseTest{
     void getGIFImage(){
 
                 given()
-                        //Весь хедер выносить сюда
-                        .header("Authorization", token) // Параметр авторизации
-
-                        //Весь хедер выносить сюда
-
-
-
-
+                        .spec(requestSpec)
                         //Все проверки ответа выносить сюда
                         .expect()//Проверка
-                        .statusCode(200)
-                        .body("data.width", CoreMatchers.equalTo(500))
-                        .body("data.height", CoreMatchers.equalTo(692))
-                        //.body("data.title", CoreMatchers.equalTo("iii"))
-
-
-                        // Проверка кода ответа
-                        //Все проверки ответа выносить сюда
-
+                        .spec(responseSpec)
+                        .spec(responseSpecGIF)
                         .when() //Отправка нашего запроса
                         .get("image/{imageHash}", imageDeleteHash) // URL куда отправлять картинку
                         .prettyPeek() // задаем вывод читаемого ответа
-
         ;
-
     }
-
-
     //Проверка существования большой картинки
     @BeforeEach
     void postBigImage(){
         imageDeleteHash1 =
                 given()
-                        //Весь хедер выносить сюда
-                        .header("Authorization", token) // Параметр авторизации
-
-                        //Весь хедер выносить сюда
-
-                        //Все боди выносить сюда
-                        .contentType("multipart/form-data")
-                        .multiPart("image", new File("src/test/resources/wolfBig.jpeg"),"multipart/form-data")
-                        // .multiPart("title", "iii","multipart/form-data")
-                        //Все боди выносить сюда
-
-                        //Все проверки ответа выносить сюда
-
+                        .spec(requestSpecMulti)
+                        .multiPart("image", new File(urlbig),"multipart/form-data")
                         .when() //Отправка нашего запроса
                         .post("image") // URL куда отправлять картинку
                         .prettyPeek() // задаем вывод читаемого ответа
@@ -513,39 +376,26 @@ public class imageTests extends BaseTest{
                         .get("data.id") //получаем хеш картинки для передачи на удаление в следующий метод
 
         ;}
-
-
     @Test
     void getBigImage(){
-
         given()
-                //Весь хедер выносить сюда
-                .header("Authorization", token) // Параметр авторизации
-
-                //Весь хедер выносить сюда
-
-
-
-
-                //Все проверки ответа выносить сюда
+                .spec(requestSpec)
                 .expect()//Проверка
-                .statusCode(200)
-                .body("data.width", CoreMatchers.equalTo(2249))
-                .body("data.height", CoreMatchers.equalTo(1500))
-                //.body("data.title", CoreMatchers.equalTo("iii"))
-
-
-                // Проверка кода ответа
-                //Все проверки ответа выносить сюда
-
+                .spec(responseSpec)
+                .spec(responseSpecBig)
                 .when() //Отправка нашего запроса
                 .get("image/{imageHash}", imageDeleteHash1) // URL куда отправлять картинку
                 .prettyPeek() // задаем вывод читаемого ответа
-
         ;
-
     }
-
-
-
+    @AfterAll
+    static void tearDown(){
+        given()
+                .spec(requestSpec)
+                .expect()
+                .spec(responseSpec)
+                .when()
+                .delete("https://api.imgur.com/3/image/{imageHash}", imageDeleteHash)
+        ;
+    }
 }
