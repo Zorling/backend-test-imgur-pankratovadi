@@ -19,7 +19,7 @@ public class AccountTests extends BaseTest{
     @Test
     void getAccountPositiveTest(){
         given()
-                .header("Authorization", token)
+              //  .header("Authorization", token)
                 .log()
                 .method()
                 .log()
